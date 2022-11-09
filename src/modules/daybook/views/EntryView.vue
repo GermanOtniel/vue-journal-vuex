@@ -1,44 +1,98 @@
 <template>
-  <div class="entry-title d-flex justify-content-between p-2">
-    <div>
-      <span class="text-success fs-3 fw-bold">27 de </span>
-      <span class="mx-1 fs-3"> Octubre</span>
-      <span class="mx-2 fs-4 fw-light"> del 2022</span>
-    </div>
-    <div>
-      <button class="btn btn-danger mx-2">
-        Borrar
-        <i class="fa fa-trash-alt"></i>
-      </button>
+  <div v-if="entry">
+    <div class="entry-title d-flex justify-content-between p-2">
+      <div>
+        <span v-if="day" class="text-success fs-3 fw-bold">{{ day }} de </span>
+        <span v-if="month" class="mx-1 fs-3"> {{ month }}</span>
+        <span v-if="yearDay" class="mx-2 fs-4 fw-light"> de {{ yearDay }}</span>
+      </div>
+      <div>
+        <button class="btn btn-danger mx-2">
+          Borrar
+          <i class="fa fa-trash-alt"></i>
+        </button>
 
-      <button class="btn btn-primary">
-        Subir foto
-        <i class="fa fa-upload"></i>
-      </button>
+        <button class="btn btn-primary">
+          Subir foto
+          <i class="fa fa-upload"></i>
+        </button>
+      </div>
     </div>
+    <hr>
+    <div class="d-flex flex-column px-3 h-75">
+      <textarea
+        placeholder="¿Qué sucedió hoy?"
+        v-model="entry.text"
+      ></textarea>
+    </div>
+    <img 
+      src="https://www.robertlandscapes.com/wp-content/uploads/2014/11/landscape-322100_1280.jpg" 
+      alt="entry-picture"
+      class="img-thumbnail"
+    />
   </div>
-  <hr>
-  <div class="d-flex flex-column px-3 h-75">
-    <textarea
-      placeholder="¿Qué sucedió hoy?"
-    ></textarea>
-  </div>
-  <img 
-    src="https://www.robertlandscapes.com/wp-content/uploads/2014/11/landscape-322100_1280.jpg" 
-    alt="entry-picture"
-    class="img-thumbnail"
+
+  <FabBtn 
+    icon="fa-save"
+    @on:click="saveEntry"
   />
-
-  <FabBtn icon="fa-save" />
 </template>
 
 <script>
 import { defineAsyncComponent } from 'vue'
+import { mapGetters } from 'vuex';
+import getDayMonthYear from '../helpers/getDayMonthYear';
 
 export default {
   components: {
     FabBtn: defineAsyncComponent(() => import('../components/FabBtn.vue'))
   },
+  data() {
+    return {
+      entry: null
+    }
+  },
+  props: {
+    id: {
+      type: Number,
+      required: true
+    }
+  },
+  computed: {
+    day() {
+        const { day } = getDayMonthYear(this.entry.date);
+        return day;
+    },
+    month() {
+        const { month } = getDayMonthYear(this.entry.date);
+        return month;
+    },
+    yearDay() {
+        const { yearDay } = getDayMonthYear(this.entry.date);
+        return yearDay;
+    },
+    ...mapGetters('journal', [ 'getEntryById'])
+  },
+  methods: {
+    loadEntry() {
+      const selectedEntry = this.getEntryById(this.id);
+      if (!selectedEntry) {
+        this.$router.push({ name: 'no-entry' });
+      }
+      this.entry = selectedEntry;
+    },
+    async saveEntry() {
+      console.log('Guardando entrada...');
+    }
+  },
+  created() {
+    this.loadEntry();
+  },
+  watch: {
+    id() {
+      this.loadEntry();
+    }
+  }
 }
 </script>
 
